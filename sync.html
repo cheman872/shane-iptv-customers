@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPTV Customer Sync</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:800px;margin:40px auto;padding:20px;background:#f5f5f5;color:#333}
+h1{text-align:center;color:#2d3436}
+.card{background:white;border-radius:12px;padding:30px;margin:20px 0;box-shadow:0 2px 8px rgba(0,0,0,0.1)}
+.bookmarklet{display:inline-block;background:linear-gradient(135deg,#6c5ce7,#a29bfe);color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-size:18px;font-weight:600;cursor:grab;user-select:none}
+.bookmarklet:hover{opacity:0.9;transform:translateY(-1px);box-shadow:0 4px 12px rgba(108,92,231,0.4)}
+.subtitle{text-align:center;color:#888;margin-top:-10px}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{background:#6c5ce7;color:white;padding:10px;text-align:left}
+td{padding:8px 10px;border-bottom:1px solid #eee}
+tr:hover{background:#f8f7ff}
+.note{background:#fff9db;border-left:4px solid #ffd43b;padding:12px 16px;border-radius:4px;margin-top:20px}
+ol{padding-left:20px}
+ol li{margin:8px 0}
+.version{font-size:11px;color:#999;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>IPTV Customer Sync</h1>
+<p class="subtitle">Drag the button below to your bookmarks bar</p>
+<div class="card">
+<h2>Sync Bookmarklet</h2>
+<a class="bookmarklet" href="javascript:void((async function(){const VER='v9';const U='https://script.google.com/macros/s/AKfycbwSnjCFNWg4_2dE2NGByh6s1umLKk2yd-bm588c6y5gjX8xzyThR6Aoq-T-nDB2O2-F/exec';const M={'bill.airce.io':{'amcheema':'Gold AMCH','samche':'GoldSamChe'},'bill.gprod.co':{'amble':'Gold 4K Premium'},'fast4k.cc':{'TV2021':'Smart tv2021','tv2021':'Smart tv2021','amble2':'Smart Amble2'},'bill.spicetv.cc':{'amble2':'Spice'},'billing.stream4k.me':{'amble':'Stream 4K'},'pay.titan4k.cc':{'tv2021':'Titan'},'sharktv.pk':{'amble2':'Crown'}};const h=location.hostname;const dm=M[h];if(!dm){alert('Unknown panel:'+h);return;}let u='',sn='';const keys=Object.keys(dm);if(keys.length===1){u=keys[0];sn=dm[u];}else{const pageUrl=location.href.toLowerCase();for(const[k,v] of Object.entries(dm)){if(k!=='TV2021'&&pageUrl.includes('/'+k)){u=k;sn=v;break;}}if(!sn){const uniqueEntries=[];const seen=new Set();for(const[k,v] of Object.entries(dm)){if(!seen.has(v)){seen.add(v);uniqueEntries.push({key:k,name:v});}}let promptMsg='Multiple accounts on '+h+'.\nWhich account are you logged into?\n\n';uniqueEntries.forEach((e,i)=>{promptMsg+=(i+1)+'. '+e.key+' â '+e.name+'\n';});promptMsg+='\nEnter the number(1-'+uniqueEntries.length+')or account name:';const m=prompt(promptMsg);if(!m){alert('Cancelled. Aborting sync.');return;}const num=parseInt(m,10);if(num>=1&&num<=uniqueEntries.length){u=uniqueEntries[num-1].key;sn=uniqueEntries[num-1].name;}else{if(dm[m]){u=m;sn=dm[m];}else{for(const[k,v] of Object.entries(dm)){if(k.toLowerCase()===m.toLowerCase()){u=k;sn=v;break;}}}}if(!sn){alert('Invalid selection:%22'+m+'%22. Aborting.');return;}}}const bt=document.body.innerText;let panel='';if(document.querySelector('[role=%22combobox%22]')||document.querySelector('.MuiSelect-select')||document.querySelector('[aria-label]')){panel='mui';}else if(document.querySelector('select[name=%22length%22]')){panel='xtream';}else if(document.querySelector('.dataTables_length select')){panel='xtream';}else{if(bt.includes('Bouquets')||bt.includes('Lines')||bt.includes('Mag Devices')){panel='xtream';}else{panel='unknown';}}async function setShowAll(){if(panel==='mui'){const combos=document.querySelectorAll('[role=%22combobox%22]');let found=false;for(const c of combos){const lbl=c.getAttribute('aria-label')||c.getAttribute('aria-labelledby')||'';const parent=c.closest('.MuiFormControl-root')||c.parentElement;const parentText=parent?parent.textContent:'';if(lbl.toLowerCase().includes('row')||parentText.includes('Rows')||parentText.includes('rows')||parentText.includes('per page')){c.click();c.focus();await new Promise(r=>setTimeout(r,500));const listbox=document.querySelector('[role=%22listbox%22]');if(listbox){const opts=listbox.querySelectorAll('[role=%22option%22],li');let best=null;let bestVal=0;opts.forEach(o=>{const val=parseInt(o.textContent.trim(),10);if(!isNaN(val)&&val>bestVal){bestVal=val;best=o;}if(o.textContent.trim().toLowerCase()==='all'){best=o;bestVal=999999;}});if(best){best.click();found=true;await new Promise(r=>setTimeout(r,1000));}}if(found)break;}}if(!found){const selects=document.querySelectorAll('.MuiSelect-select');for(const s of selects){const parent=s.closest('.MuiFormControl-root')||s.parentElement;const parentText=parent?parent.textContent:'';if(parentText.includes('Rows')||parentText.includes('rows')||parentText.includes('per page')){s.click();await new Promise(r=>setTimeout(r,500));const listbox=document.querySelector('[role=%22listbox%22]');if(listbox){const opts=listbox.querySelectorAll('[role=%22option%22],li');let best=null;let bestVal=0;opts.forEach(o=>{const val=parseInt(o.textContent.trim(),10);if(!isNaN(val)&&val>bestVal){bestVal=val;best=o;}if(o.textContent.trim().toLowerCase()==='all'){best=o;bestVal=999999;}});if(best){best.click();found=true;await new Promise(r=>setTimeout(r,1000));}}if(found)break;}}}if(!found){const sels=document.querySelectorAll('select');for(const s of sels){const opts=Array.from(s.options);const allOpt=opts.find(o=>o.text.toLowerCase()==='all'||parseInt(o.value,10)>=1000);if(allOpt){s.value=allOpt.value;s.dispatchEvent(new Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,1000));break;}}}}else{const sels=document.querySelectorAll('select');for(const s of sels){const opts=Array.from(s.options);const allOpt=opts.find(o=>o.text.trim().toLowerCase()==='all'||parseInt(o.value,10)>=1000);if(allOpt){s.value=allOpt.value;s.dispatchEvent(new Event('change',{bubbles:true}));await new Promise(r=>setTimeout(r,1000));break;}}}}await setShowAll();await new Promise(r=>setTimeout(r,1500));const rows=document.querySelectorAll('table tbody tr');const data=[];rows.forEach(r=>{const cells=r.querySelectorAll('td');if(cells.length>=2){const rowData=[];cells.forEach(c=>{rowData.push(c.innerText.trim());});if(rowData.some(c=>c.length>0)){data.push(rowData);}}});const headers=[];const thCells=document.querySelectorAll('table thead th,table thead td');thCells.forEach(th=>{headers.push(th.innerText.trim());});if(data.length===0){alert('No data found in table. Make sure you are on the Users/Lines page.');return;}let totalInfo='';const infoEl=document.querySelector('.dataTables_info,.MuiTablePagination-displayedRows,[class*=%22pagination-info%22]');if(infoEl){totalInfo=infoEl.textContent;}const payload={server:sn,username:u,headers:headers,rows:data,totalInfo:totalInfo,url:location.href,version:VER};const notice=document.createElement('div');notice.style.cssText='position:fixed;top:20px;right:20px;background:#6c5ce7;color:white;padding:16px 24px;border-radius:8px;z-index:99999;font-size:16px;box-shadow:0 4px 12px rgba(0,0,0,0.3);';notice.textContent='Syncing '+data.length+' rows to '+sn+'('+VER+')...';document.body.appendChild(notice);try{const resp=await fetch(U,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload),redirect:'follow'});const result=await resp.text();notice.style.background='#00b894';notice.textContent='Synced '+data.length+' rows to '+sn+'('+VER+')';setTimeout(()=>notice.remove(),5000);}catch(e){notice.style.background='#d63031';notice.textContent='Sync failed:'+e.message;setTimeout(()=>notice.remove(),8000);}})());">Sync IPTV Panel v9</a>
+<ol>
+<li><strong>Drag</strong> the purple button above to your bookmarks bar</li>
+<li><strong>Log in</strong> to any IPTV panel below</li>
+<li><strong>Navigate</strong> to the Users / Lines list page</li>
+<li><strong>Click</strong> the bookmark &mdash; it will scrape all pages and sync automatically</li>
+</ol>
+<p class="version">Version: v9 &mdash; multi-account prompt + version display</p>
+</div>
+<div class="card">
+<h2>Supported Panels &amp; Accounts</h2>
+<table cellspacing="0">
+<thead><tr><th>Panel URL</th><th>Account</th><th>Server Name</th></tr></thead>
+<tbody>
+<tr><td>bill.airce.io</td><td>amcheema</td><td>Gold AMCH</td></tr>
+<tr><td>bill.airce.io</td><td>samche</td><td>GoldSamChe</td></tr>
+<tr><td>bill.gprod.co</td><td>amble</td><td>Gold 4K Premium</td></tr>
+<tr><td>fast4k.cc</td><td>amble2</td><td>Smart Amble2</td></tr>
+<tr><td>fast4k.cc</td><td>TV2021 / tv2021</td><td>Smart tv2021</td></tr>
+<tr><td>bill.spicetv.cc</td><td>amble2</td><td>Spice</td></tr>
+<tr><td>billing.stream4k.me</td><td>amble</td><td>Stream 4K</td></tr>
+<tr><td>pay.titan4k.cc</td><td>tv2021</td><td>Titan</td></tr>
+<tr><td>sharktv.pk</td><td>amble2</td><td>Crown</td></tr>
+</tbody>
+</table>
+</div>
+<div class="note">
+<strong>Note:</strong> After syncing, data will appear on your website at
+<a href="https://cheman872.github.io/iptv-customers/" style="color:#38bdf8">cheman872.github.io/iptv-customers</a>
+within seconds. You can sync multiple panels &mdash; each one updates its own server's data independently.
+</div>
+</body>
+</html>

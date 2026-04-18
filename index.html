@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IPTV Customer Manager</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh}
+.login-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#0f172a;z-index:9999;display:flex;align-items:center;justify-content:center}
+.login-box{background:#1e293b;border:1px solid #334155;border-radius:16px;padding:40px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.login-box h2{color:#38bdf8;font-size:1.4rem;margin-bottom:6px;text-align:center}
+.login-box p{color:#94a3b8;font-size:.85rem;text-align:center;margin-bottom:24px}
+.login-box label{display:block;color:#94a3b8;font-size:.8rem;margin-bottom:4px;margin-top:14px}
+.login-box input[type="text"],.login-box input[type="password"]{width:100%;padding:10px 14px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.9rem;outline:none;transition:border-color .2s}
+.login-box input:focus{border-color:#38bdf8}
+.login-box .login-btn{width:100%;padding:10px;border-radius:8px;border:none;background:#38bdf8;color:#0f172a;font-size:.95rem;font-weight:600;cursor:pointer;margin-top:20px;transition:background .2s}
+.login-box .login-btn:hover{background:#0ea5e9}
+.login-error{color:#f87171;font-size:.8rem;text-align:center;margin-top:10px;display:none}
+.header{background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-bottom:1px solid #334155;padding:20px 30px;position:sticky;top:0;z-index:100;display:flex;justify-content:space-between;align-items:center}
+.header-left h1{font-size:1.5rem;font-weight:700;color:#38bdf8;margin-bottom:4px}
+.header-left p{font-size:.85rem;color:#94a3b8}
+.logout-btn{padding:6px 14px;border-radius:8px;border:1px solid #475569;background:#1e293b;color:#94a3b8;font-size:.8rem;cursor:pointer;transition:all .2s}
+.logout-btn:hover{background:#ef4444;color:#fff;border-color:#ef4444}
+.loading{text-align:center;padding:60px 20px;color:#94a3b8;font-size:1rem}
+.loading .spinner{display:inline-block;width:40px;height:40px;border:3px solid #334155;border-top-color:#38bdf8;border-radius:50%;animation:spin 1s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.controls{padding:16px 30px;background:#1e293b;border-bottom:1px solid #334155;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.search-box{flex:1;min-width:220px;padding:10px 14px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.9rem;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:#38bdf8}
+.search-box::placeholder{color:#64748b}
+.filter-btn{padding:8px 16px;border-radius:8px;border:1px solid #475569;background:#1e293b;color:#94a3b8;font-size:.8rem;cursor:pointer;transition:all .2s;white-space:nowrap}
+.filter-btn:hover,.filter-btn.active{background:#38bdf8;color:#0f172a;border-color:#38bdf8;font-weight:600}
+.filter-btn.expired-btn:hover,.filter-btn.expired-btn.active{background:#ef4444;border-color:#ef4444;color:#fff}
+.server-filter{padding:8px 12px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.8rem;outline:none;cursor:pointer}
+.stats{padding:12px 30px;background:#1e293b50;display:flex;gap:20px;flex-wrap:wrap;font-size:.8rem;color:#94a3b8;border-bottom:1px solid #334155}
+.stat{display:flex;align-items:center;gap:6px}
+.stat .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot-active{background:#22c55e}.dot-expiring{background:#f59e0b}.dot-expired{background:#ef4444}.dot-total{background:#38bdf8}
+.credits-bar{padding:14px 30px;background:linear-gradient(135deg,#1e293b 0%,#162032 100%);border-bottom:1px solid #334155;display:none}
+.credits-bar h3{font-size:.8rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;font-weight:600}
+.credits-grid{display:flex;gap:10px;flex-wrap:wrap}
+.credit-card{padding:8px 14px;border-radius:10px;border:1px solid #334155;background:#0f172a;min-width:120px;display:flex;flex-direction:column;gap:2px}
+.credit-card .cc-server{font-size:.72rem;color:#94a3b8;font-weight:500}
+.credit-card .cc-count{font-size:.7rem;color:#64748b}
+.credit-card .cc-users{font-size:1.1rem;font-weight:700;color:#38bdf8}
+.credit-card.cc-low .cc-count{color:#f87171}
+.credit-card.cc-low .cc-users{color:#f87171}
+.credit-card.cc-warn .cc-count{color:#fbbf24}
+.credit-card.cc-warn .cc-users{color:#fbbf24}
+.table-wrap{overflow-x:auto;padding:0 30px 30px}
+table{width:100%;border-collapse:collapse;margin-top:16px;font-size:.85rem}
+thead th{background:#1e293b;color:#94a3b8;font-weight:600;text-transform:uppercase;font-size:.7rem;letter-spacing:.5px;padding:12px 14px;text-align:left;position:sticky;top:0;border-bottom:2px solid #334155;cursor:pointer;user-select:none}
+thead th:hover{color:#38bdf8}
+tbody tr{border-bottom:1px solid #1e293b;transition:background .15s}
+tbody tr:hover{background:#1e293b80}
+tbody td{padding:10px 14px}
+.mac{font-family:'Courier New',monospace;color:#a78bfa;font-size:.82rem}
+.server-tag{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.72rem;font-weight:600;letter-spacing:.3px}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.72rem;font-weight:600}
+.status-active{background:#22c55e20;color:#4ade80;border:1px solid #22c55e40}
+.status-expiring-soon{background:#f59e0b20;color:#fbbf24;border:1px solid #f59e0b40}
+.status-expired{background:#ef444420;color:#f87171;border:1px solid #ef444440}
+.customer-name{font-weight:500;color:#f1f5f9}
+.no-results{text-align:center;padding:60px 20px;color:#64748b;font-size:1rem}
+.server-gold-amch{background:#eab30820;color:#fbbf24;border:1px solid #eab30840}
+.server-goldsamche{background:#f9731620;color:#fb923c;border:1px solid #f9731640}
+.server-gold-4k-premium{background:#a855f720;color:#c084fc;border:1px solid #a855f740}
+.server-spice{background:#ec489920;color:#f472b6;border:1px solid #ec489940}
+.server-smart-amble2{background:#14b8a620;color:#2dd4bf;border:1px solid #14b8a640}
+.server-smart-tv2021{background:#06b6d420;color:#22d3ee;border:1px solid #06b6d440}
+.server-titan{background:#6366f120;color:#818cf8;border:1px solid #6366f140}
+.server-crown{background:#84cc1620;color:#a3e635;border:1px solid #84cc1640}
+.server-stream-4k{background:#f4364620;color:#fb7185;border:1px solid #f4364640}
+.phone-cell{cursor:pointer;color:#94a3b8;font-size:.82rem;white-space:nowrap}
+.phone-cell:hover{color:#38bdf8}
+.phone-cell .phone-num{color:#2dd4bf;font-family:'Courier New',monospace}
+.phone-cell .phone-add{color:#475569;font-style:italic;font-size:.75rem}
+.phone-cell .phone-add:hover{color:#38bdf8}
+.phone-edit-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:9998;display:flex;align-items:center;justify-content:center}
+.phone-edit-box{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:24px;width:340px;max-width:90vw;box-shadow:0 10px 40px rgba(0,0,0,0.5)}
+.phone-edit-box h3{color:#38bdf8;font-size:1rem;margin-bottom:4px}
+.phone-edit-box .pe-name{color:#94a3b8;font-size:.8rem;margin-bottom:16px}
+.phone-edit-box input{width:100%;padding:10px 14px;border-radius:8px;border:1px solid #475569;background:#0f172a;color:#e2e8f0;font-size:.95rem;outline:none;margin-bottom:14px}
+.phone-edit-box input:focus{border-color:#38bdf8}
+.phone-edit-box .pe-btns{display:flex;gap:8px}
+.phone-edit-box .pe-btns button{flex:1;padding:8px;border-radius:8px;border:none;font-size:.85rem;font-weight:600;cursor:pointer}
+.pe-save{background:#38bdf8;color:#0f172a}.pe-save:hover{background:#0ea5e9}
+.pe-cancel{background:#334155;color:#94a3b8}.pe-cancel:hover{background:#475569}
+.pe-delete{background:#ef444430;color:#f87171;border:1px solid #ef444440!important}.pe-delete:hover{background:#ef4444;color:#fff}
+.save-indicator{position:fixed;bottom:20px;right:20px;background:#22c55e;color:#0f172a;padding:10px 20px;border-radius:8px;font-size:.85rem;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s}
+footer{text-align:center;padding:20px;color:#475569;font-size:.75rem;border-top:1px solid #1e293b}
+.sync-bar{padding:10px 30px;background:#0f172a;border-bottom:1px solid #1e293b;display:flex;align-items:center;gap:16px;flex-wrap:wrap;font-size:.78rem}
+.sync-overall{color:#94a3b8;display:flex;align-items:center;gap:6px}
+.sync-overall strong{color:#e2e8f0}
+.sync-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.sync-dot-ok{background:#22c55e}.sync-dot-warn{background:#f59e0b}.sync-dot-old{background:#ef4444}.sync-dot-none{background:#475569}
+.sync-servers{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sync-chip{padding:3px 10px;border-radius:10px;font-size:.7rem;display:inline-flex;align-items:center;gap:5px;border:1px solid #334155;background:#1e293b;color:#94a3b8;white-space:nowrap}
+.sync-chip.ok{border-color:#22c55e40;color:#4ade80;background:#22c55e10}
+.sync-chip.warn{border-color:#f59e0b40;color:#fbbf24;background:#f59e0b10}
+.sync-chip.old{border-color:#ef444440;color:#f87171;background:#ef444410}
+.sync-chip.none{border-color:#33415540;color:#64748b}
+@media(max-width:768px){.sync-bar{padding:8px 16px}.sync-servers{gap:5px}}
+/* Mobile card list (hidden on desktop) */
+.mobile-cards{display:none;padding:12px}
+.m-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px 16px;margin-bottom:10px}
+.m-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.m-card-name{font-weight:600;color:#f1f5f9;font-size:.95rem;flex:1}
+.m-card-num{color:#64748b;font-size:.72rem;min-width:24px;text-align:right}
+.m-card-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.m-card-label{color:#64748b;font-size:.72rem;text-transform:uppercase;letter-spacing:.3px}
+.m-card-val{color:#cbd5e1;font-size:.82rem;text-align:right}
+.m-card-phone{margin-top:8px;padding-top:8px;border-top:1px solid #334155}
+.m-card-phone .phone-num{color:#2dd4bf;font-family:'Courier New',monospace;font-size:.9rem}
+.m-card-phone .phone-add{color:#475569;font-style:italic;font-size:.82rem}
+.m-card .mac{font-size:.75rem}
+@media(max-width:768px){
+  .controls{padding:12px 16px}
+  .header{padding:14px 16px}
+  .header-left h1{font-size:1.1rem}
+  .header-left p{font-size:.75rem}
+  .stats{padding:10px 16px;gap:12px}
+  .login-box{padding:28px 20px}
+  .credits-bar{padding:10px 16px}
+  .credits-grid{gap:6px}
+  .credit-card{min-width:100px;padding:6px 10px}
+  .credit-card .cc-users{font-size:.95rem}
+  .filter-btn{padding:6px 10px;font-size:.72rem}
+  .search-box{min-width:100%;font-size:16px} /* 16px prevents iOS zoom */
+  .server-filter{font-size:.78rem;flex:1}
+  /* Hide table, show cards */
+  .table-wrap{display:none!important}
+  .mobile-cards{display:block}
+}
+</style>
+</head>
+<body>
+
+<!-- Login Screen -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>&#128225; IPTV Manager</h2>
+    <p>Sign in to access customer data</p>
+    <label for="loginUser">Username</label>
+    <input type="text" id="loginUser" placeholder="Enter username" autocomplete="off">
+    <label for="loginPass">Password</label>
+    <input type="password" id="loginPass" placeholder="Enter password">
+    <button class="login-btn" onclick="doLogin()">Sign In</button>
+    <div class="login-error" id="loginError">Invalid username or password</div>
+  </div>
+</div>
+
+<!-- Phone Edit Modal -->
+<div class="phone-edit-overlay" id="phoneEditOverlay" style="display:none" onclick="if(event.target===this)closePhoneEdit()">
+  <div class="phone-edit-box">
+    <h3>Phone Number</h3>
+    <div class="pe-name" id="peCustomerName"></div>
+    <input type="tel" id="pePhoneInput" placeholder="e.g. +16041234567" onkeydown="if(event.key==='Enter')savePhone()">
+    <div class="pe-btns">
+      <button class="pe-cancel" onclick="closePhoneEdit()">Cancel</button>
+      <button class="pe-delete" id="peDeleteBtn" onclick="deletePhone()" style="display:none">Remove</button>
+      <button class="pe-save" onclick="savePhone()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="save-indicator" id="saveIndicator">Saved</div>
+
+<!-- Main App (hidden until login) -->
+<div id="appContainer" style="display:none">
+<div class="header">
+  <div class="header-left">
+    <h1>&#128225; IPTV Customer Manager</h1>
+    <p>Customer database across all servers &mdash; Live Data</p>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="logout-btn" onclick="setupGHToken()" title="GitHub token for saving phone edits">&#9881;</button>
+    <button class="logout-btn" onclick="doLogout()">Logout</button>
+  </div>
+</div>
+<div class="controls" style="display:none" id="controlsBar">
+  <input type="text" class="search-box" id="searchBox" placeholder="Search by name, MAC, ID, or phone number...">
+  <select class="server-filter" id="serverFilter"><option value="">All Servers</option></select>
+  <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+  <button class="filter-btn" data-filter="active" onclick="setFilter('active')">Active</button>
+  <button class="filter-btn" data-filter="7days" onclick="setFilter('7days')">Expiring 7 Days</button>
+  <button class="filter-btn" data-filter="14days" onclick="setFilter('14days')">Expiring 14 Days</button>
+  <button class="filter-btn expired-btn" data-filter="expired" onclick="setFilter('expired')">Expired</button>
+</div>
+<div class="stats" id="statsBar" style="display:none"></div>
+<div class="sync-bar" id="syncBar" style="display:none">
+  <div class="sync-overall">
+    <span class="sync-dot" id="syncOverallDot"></span>
+    Last sync: <strong id="syncOverallTime">—</strong>
+  </div>
+  <div class="sync-servers" id="syncServers"></div>
+</div>
+<div class="credits-bar" id="creditsBar">
+  <h3>Credits Remaining</h3>
+  <div class="credits-grid" id="creditsGrid"></div>
+</div>
+<div id="loadingDiv" class="loading"><div class="spinner"></div><br>Loading customer data...</div>
+<div class="table-wrap">
+  <table style="display:none" id="mainTable">
+    <thead><tr>
+      <th>#</th>
+      <th onclick="sortTable('name')">Customer Name &#9660;</th>
+      <th>Phone</th>
+      <th onclick="sortTable('mac')">MAC Address &#9660;</th>
+      <th onclick="sortTable('server')">Server &#9660;</th>
+      <th onclick="sortTable('expiry')">Expiry Date &#9660;</th>
+      <th onclick="sortTable('status')">Status &#9660;</th>
+      <th onclick="sortTable('id')">Customer ID &#9660;</th>
+    </tr></thead>
+    <tbody id="customerTable"></tbody>
+  </table>
+  <div class="no-results" id="noResults" style="display:none">No customers found matching your search.</div>
+</div>
+<div class="mobile-cards" id="mobileCards"></div>
+<footer>IPTV Customer Manager &mdash; Auto-refreshes on page load</footer>
+</div>
+
+<script>
+// Auth
+const _u='Shane',_p='Redwine#26';
+function doLogin(){
+  const u=document.getElementById('loginUser').value.trim();
+  const p=document.getElementById('loginPass').value;
+  if(u===_u&&p===_p){
+    sessionStorage.setItem('iptv_auth','1');
+    document.getElementById('loginOverlay').style.display='none';
+    document.getElementById('appContainer').style.display='block';
+    loadAllData();
+  } else {
+    document.getElementById('loginError').style.display='block';
+  }
+}
+function doLogout(){
+  sessionStorage.removeItem('iptv_auth');
+  document.getElementById('appContainer').style.display='none';
+  document.getElementById('loginOverlay').style.display='flex';
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+  document.getElementById('loginError').style.display='none';
+}
+document.getElementById('loginPass').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+document.getElementById('loginUser').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('loginPass').focus();});
+if(sessionStorage.getItem('iptv_auth')==='1'){
+  document.getElementById('loginOverlay').style.display='none';
+  document.getElementById('appContainer').style.display='block';
+}
+
+// App
+const APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwSnjCFNWg4_2dE2NGByh6s1umLKk2yd-bm588c6y5gjX8xzyThR6Aoq-T-nDB2O2-F/exec';
+const SHEET_ID='1uGu7GWmqHKIP6-2Z7LTRdBenBQovyIKS634lj7wUe34';
+const SERVERS=[{name:'Gold AMCH',gid:0},{name:'GoldSamChe',gid:78207741},{name:'Gold 4K Premium',gid:6151580},{name:'Spice',gid:1946979001},{name:'Smart Amble2',gid:950796683},{name:'Smart 2021',gid:1688805080},{name:'Titan',gid:146800598},{name:'Crown',gid:613843388},{name:'Stream 4K',gid:2123429132}];
+let allCustomers=[],currentFilter='all',currentSort={col:'name',asc:true};
+
+// Phone data
+let phoneData={};
+let editingPhoneKey=null;
+let phoneSha=null; // GitHub file SHA for updates
+const GH_REPO='cheman872/shane-iptv-customers';
+const GH_FILE='phones.json';
+function getGHToken(){return localStorage.getItem('iptv_gh_token')||'';}
+function setGHToken(t){localStorage.setItem('iptv_gh_token',t);}
+
+function getPhoneKey(server,mac,id,name){return server+'|'+(mac||id||name);}
+
+function getPhone(server,mac,id,name){
+  const key=getPhoneKey(server,mac,id,name);
+  const entry=phoneData[key];
+  return entry?entry.phone:null;
+}
+
+function formatPhone(phone){
+  if(!phone)return null;
+  const clean=phone.replace(/[^\d+]/g,'');
+  const m=clean.match(/^\+?1?(\d{3})(\d{3})(\d{4})$/);
+  if(m)return`+1 (${m[1]}) ${m[2]}-${m[3]}`;
+  return phone;
+}
+
+function openPhoneEdit(server,mac,id,name){
+  editingPhoneKey=getPhoneKey(server,mac,id,name);
+  const current=getPhone(server,mac,id,name);
+  document.getElementById('peCustomerName').textContent=name+' \u2014 '+server;
+  document.getElementById('pePhoneInput').value=current||'';
+  document.getElementById('peDeleteBtn').style.display=current?'block':'none';
+  document.getElementById('phoneEditOverlay').style.display='flex';
+  setTimeout(()=>document.getElementById('pePhoneInput').focus(),100);
+}
+
+function closePhoneEdit(){
+  document.getElementById('phoneEditOverlay').style.display='none';
+  editingPhoneKey=null;
+}
+
+async function savePhone(){
+  const phone=document.getElementById('pePhoneInput').value.trim();
+  if(!phone||!editingPhoneKey){closePhoneEdit();return;}
+  let clean=phone.replace(/[\s\-\(\)\.]/g,'');
+  if(/^\d{10}$/.test(clean))clean='+1'+clean;
+  if(/^1\d{10}$/.test(clean))clean='+'+clean;
+  phoneData[editingPhoneKey]={phone:clean,manual:true};
+  closePhoneEdit();
+  renderTable();
+  await pushPhonesToGitHub();
+}
+
+async function deletePhone(){
+  if(!editingPhoneKey)return;
+  delete phoneData[editingPhoneKey];
+  closePhoneEdit();
+  renderTable();
+  await pushPhonesToGitHub();
+}
+
+function setupGHToken(){
+  const current=getGHToken();
+  const token=prompt('Enter GitHub token for saving phone edits.\n\nGet one from: github.com/settings/tokens\n\nCurrent: '+(current?current.substring(0,10)+'...':'not set'));
+  if(token===null)return;
+  if(token==='')localStorage.removeItem('iptv_gh_token');
+  else setGHToken(token.trim());
+  showSaveIndicator(token?'Token saved':'Token removed');
+}
+
+let pushTimeout=null;
+async function pushPhonesToGitHub(){
+  // Debounce rapid edits
+  if(pushTimeout)clearTimeout(pushTimeout);
+  pushTimeout=setTimeout(async()=>{
+    if(!getGHToken()){showSaveIndicator('Saved locally');return;}
+    try{
+      showSaveIndicator('Saving...');
+      const content=btoa(unescape(encodeURIComponent(JSON.stringify(phoneData,null,2))));
+      const body={message:'Update phone numbers',content};
+      if(phoneSha)body.sha=phoneSha;
+      const r=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,{
+        method:'PUT',
+        headers:{'Authorization':'token '+getGHToken(),'Content-Type':'application/json'},
+        body:JSON.stringify(body)
+      });
+      if(r.ok){
+        const data=await r.json();
+        phoneSha=data.content.sha;
+        showSaveIndicator('Saved');
+      } else {
+        const err=await r.text();
+        console.error('GitHub save failed:',r.status,err);
+        showSaveIndicator('Save failed');
+      }
+    }catch(e){
+      console.error('GitHub save error:',e);
+      showSaveIndicator('Save failed');
+    }
+  },500);
+}
+
+function showSaveIndicator(msg){
+  const el=document.getElementById('saveIndicator');
+  el.textContent=msg||'Saved';
+  el.style.opacity='1';
+  if(msg==='Saving...')return;
+  setTimeout(()=>{el.style.opacity='0';},1500);
+}
+
+function parseCSV(t){const lines=t.split('\n');return lines.map(line=>{const r=[];let c='',q=false;for(let i=0;i<line.length;i++){if(line[i]==='"')q=!q;else if(line[i]===','&&!q){r.push(c.trim());c='';}else c+=line[i];}r.push(c.trim());return r;});}
+
+function normalizeDate(d){
+  if(!d)return null;
+  d=d.replace(/"/g,'').trim();
+  if(!d||d.toLowerCase()==='n/a'||d==='-'||d==='')return null;
+  d=d.replace(/\s+[+-]\d+\s*$/,'').trim();
+  d=d.replace(/(\d{4})\s*(?:\d+\s+(?:months?|days?|weeks?|years?)\s+left|Expired|Active|Unknown).*$/i,'$1').trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(d))return d;
+  let m=d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(m)return`${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  const mo={jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12',january:'01',february:'02',march:'03',april:'04',june:'06',july:'07',august:'08',september:'09',october:'10',november:'11',december:'12'};
+  m=d.match(/^(\d{1,2})-(\w{3,9})-(\d{2,4})$/i);
+  if(m){let y=m[3].length===2?(parseInt(m[3])>50?'19'+m[3]:'20'+m[3]):m[3];const mn=mo[m[2].toLowerCase()];if(mn)return`${y}-${mn}-${m[1].padStart(2,'0')}`;}
+  m=d.match(/^(\w{3,9})\s+(\d{1,2}),?\s*(\d{4})$/i);
+  if(m){const mn=mo[m[1].toLowerCase()];if(mn)return`${m[3]}-${mn}-${m[2].padStart(2,'0')}`;}
+  m=d.match(/^(\d{1,2})\s+(\w{3,9})\s+(\d{4})$/i);
+  if(m){const mn=mo[m[2].toLowerCase()];if(mn)return`${m[3]}-${mn}-${m[1].padStart(2,'0')}`;}
+  m=d.match(/^(\d{1,2})\s+(\w{3,9})\s+(\d{2})$/i);
+  if(m){let y=parseInt(m[3])>50?'19'+m[3]:'20'+m[3];const mn=mo[m[2].toLowerCase()];if(mn)return`${y}-${mn}-${m[1].padStart(2,'0')}`;}
+  m=d.match(/^(\d{1,2})-(\d{1,2})-(\d{4})$/);
+  if(m)return`${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}`;
+  const parsed=new Date(d);
+  if(!isNaN(parsed.getTime())){
+    const yy=parsed.getFullYear();const mm=String(parsed.getMonth()+1).padStart(2,'0');const dd=String(parsed.getDate()).padStart(2,'0');
+    if(yy>2000&&yy<2100)return`${yy}-${mm}-${dd}`;
+  }
+  return null;
+}
+
+function formatDate(isoDate){
+  if(!isoDate)return '\u2014';
+  const d=new Date(isoDate+'T00:00:00');
+  if(isNaN(d.getTime()))return isoDate;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return`${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+let serverMeta={};
+async function fetchFromAppsScript(){try{const r=await fetch(APPS_SCRIPT_URL+'?action=getAll');if(!r.ok)return null;const data=await r.json();const SKIP=[];let customers=[];for(const[serverName,serverData] of Object.entries(data)){if(SKIP.includes(serverName))continue;serverMeta[serverName]={users:serverData.users?serverData.users.length:0,credits:serverData.credits||null,lastUpdated:serverData.lastUpdated||null};if(!serverData.users||!serverData.users.length)continue;serverData.users.forEach(u=>{const exp=normalizeDate(u.expiry);customers.push([u.id||u.username||'',u.mac||'',exp,u.name||u.description||'',serverName]);});}return customers.length>0?customers:null;}catch(e){console.error('Apps Script fetch failed:',e);return null;}}
+
+async function fetchServerData(s){const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${s.gid}`;try{const r=await fetch(url);if(!r.ok)return[];const t=await r.text();const rows=parseCSV(t);if(rows.length<2)return[];const h=rows[0].map(x=>x.toLowerCase().replace(/"/g,'').trim());const cs=[];let idC=-1,macC=-1,expC=-1,nameC=-1,descC=-1;h.forEach((x,i)=>{if((x.includes('customer')&&x.includes('id'))||x==='customer id')idC=i;if(x.includes('mac'))macC=i;if(x.includes('expir')||x.includes('date'))expC=i;if(x.includes('name')&&!x.includes('id'))nameC=i;if(x.includes('desc'))descC=i;});if(nameC===-1&&descC!==-1)nameC=descC;if(idC===-1)idC=0;for(let i=1;i<rows.length;i++){const r2=rows[i];if(!r2||r2.length<2)continue;const id=(r2[idC]||'').replace(/"/g,'').trim();const mac=macC>=0?(r2[macC]||'').replace(/"/g,'').trim():'';const exp=expC>=0?normalizeDate(r2[expC]):null;const nm=nameC>=0?(r2[nameC]||'').replace(/"/g,'').trim():'';if(!id&&!mac&&!nm)continue;cs.push([id,mac,exp,nm,s.name]);}return cs;}catch(e){console.error('Error:',s.name,e);return[];}}
+
+async function fetchCredits(){
+try{const r=await fetch('https://cheman872.github.io/iptv-customers/credits.json?t='+Date.now());if(!r.ok)return;const data=await r.json();for(const[server,info] of Object.entries(data)){if(!serverMeta[server])serverMeta[server]={users:0,credits:null,lastUpdated:null};serverMeta[server].credits=info.credits;}}catch(e){console.log('Credits fetch failed:',e);}}
+
+async function fetchPhones(){
+try{
+  const token=getGHToken();
+  if(token){
+    // Fetch via GitHub API to get SHA (needed for updates)
+    const r=await fetch(`https://api.github.com/repos/${GH_REPO}/contents/${GH_FILE}`,{
+      headers:{'Authorization':'token '+token}
+    });
+    if(r.ok){
+      const data=await r.json();
+      phoneSha=data.sha;
+      phoneData=JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g,'')))));
+      return;
+    }
+  }
+  // Fallback to GitHub Pages (read-only, edits save locally only)
+  const r2=await fetch('https://cheman872.github.io/iptv-customers/phones.json?t='+Date.now());
+  if(r2.ok)phoneData=await r2.json();
+}catch(e){console.log('Phones fetch failed:',e);}}
+
+async function loadAllData(){
+allCustomers=await fetchFromAppsScript();
+if(!allCustomers||allCustomers.length===0){console.log('Apps Script empty, falling back to Google Sheets');const results=await Promise.all(SERVERS.map(s=>fetchServerData(s)));allCustomers=results.flat();}
+await Promise.all([fetchCredits(),fetchPhones()]);
+document.getElementById('loadingDiv').style.display='none';document.getElementById('controlsBar').style.display='flex';document.getElementById('statsBar').style.display='flex';document.getElementById('mainTable').style.display='table';document.getElementById('mobileCards').style.display='';const sf=document.getElementById('serverFilter');[...new Set(allCustomers.map(c=>c[4]))].sort().forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sf.appendChild(o);});renderCredits();renderSyncStatus();renderTable();}
+
+function renderCredits(){
+const grid=document.getElementById('creditsGrid');
+const bar=document.getElementById('creditsBar');
+const servers=Object.entries(serverMeta).sort((a,b)=>a[0].localeCompare(b[0]));
+if(!servers.length){bar.style.display='none';return;}
+bar.style.display='block';
+grid.innerHTML=servers.map(([name,meta])=>{
+const credits=meta.credits!=null?meta.credits:'\u2014';
+const numCredits=parseInt(credits,10);
+const cls=!isNaN(numCredits)&&numCredits<=5?'cc-low':!isNaN(numCredits)&&numCredits<=20?'cc-warn':'';
+const serverCls=getServerClass(name);
+const serverCustomers=allCustomers.filter(c=>c[4]===name);
+const activeCount=serverCustomers.filter(c=>{const st=getStatus(c[2]);return st==='active'||st==='expiring-7'||st==='expiring-14';}).length;
+const totalCount=serverCustomers.length;
+return`<div class="credit-card ${cls}"><span class="cc-server"><span class="server-tag ${serverCls}">${name}</span></span><span class="cc-users">${activeCount} active</span><span class="cc-count">${totalCount} total \u00B7 ${credits} credits</span></div>`;
+}).join('');}
+
+function getStatus(e){
+  if(!e||e==='null'||e==='undefined')return'unknown';
+  const n=new Date();n.setHours(0,0,0,0);
+  const x=new Date(e+'T00:00:00');
+  if(isNaN(x.getTime()))return'unknown';
+  const d=Math.floor((x-n)/(864e5));
+  if(d<0)return'expired';
+  if(d<=7)return'expiring-7';
+  if(d<=14)return'expiring-14';
+  return'active';
+}
+
+function getStatusLabel(st,e){
+  if(st==='unknown')return'Unknown';
+  const n=new Date();n.setHours(0,0,0,0);
+  const x=new Date(e+'T00:00:00');
+  const d=Math.floor((x-n)/(864e5));
+  if(st==='expired')return'Expired';
+  if(st==='expiring-7'||st==='expiring-14')return d===0?'Expires Today':d===1?'Expires Tomorrow':`Expires in ${d}d`;
+  if(d<=30)return`${d} days left`;
+  const months=Math.floor(d/30);
+  return months===1?'1 month left':`${months} months left`;
+}
+
+function getServerClass(s){return'server-'+s.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'');}
+
+function renderTable(){
+const search=document.getElementById('searchBox').value.toLowerCase();
+const sf=document.getElementById('serverFilter').value;
+let f=allCustomers.filter(c=>{
+  const[id,mac,exp,nm,sv]=c;
+  if(sf&&sv!==sf)return false;
+  const st=getStatus(exp);
+  if(currentFilter==='active'&&st!=='active')return false;
+  if(currentFilter==='7days'&&st!=='expiring-7')return false;
+  if(currentFilter==='14days'&&!['expiring-7','expiring-14'].includes(st))return false;
+  if(currentFilter==='expired'&&st!=='expired')return false;
+  if(search){
+    const phone=getPhone(sv,mac,id,nm)||'';
+    if(!nm.toLowerCase().includes(search)&&!mac.toLowerCase().includes(search)&&!id.toLowerCase().includes(search)&&!phone.toLowerCase().includes(search))return false;
+  }
+  return true;
+});
+const ci={name:3,mac:1,server:4,expiry:2,status:2,id:0}[currentSort.col]||0;
+f.sort((a,b)=>{let va=(a[ci]||'').toLowerCase(),vb=(b[ci]||'').toLowerCase();if(currentSort.col==='status'){va=getStatus(a[2]);vb=getStatus(b[2]);}return currentSort.asc?va.localeCompare(vb):vb.localeCompare(va);});
+const statsBase=sf?allCustomers.filter(c=>c[4]===sf):allCustomers;
+const total=statsBase.length,act=statsBase.filter(c=>getStatus(c[2])==='active').length,expiring=statsBase.filter(c=>['expiring-7','expiring-14'].includes(getStatus(c[2]))).length,exp=statsBase.filter(c=>getStatus(c[2])==='expired').length;
+document.getElementById('statsBar').innerHTML=`<span class="stat"><span class="dot dot-total"></span>Total: ${total}</span><span class="stat"><span class="dot dot-active"></span>Active: ${act}</span><span class="stat"><span class="dot dot-expiring"></span>Expiring: ${expiring}</span><span class="stat"><span class="dot dot-expired"></span>Expired: ${exp}</span><span class="stat">Showing: ${f.length}</span>`;
+const tb=document.getElementById('customerTable');
+if(!f.length){tb.innerHTML='';document.getElementById('noResults').style.display='block';return;}
+document.getElementById('noResults').style.display='none';
+const rows=f.map((c,i)=>{
+  const[id,mac,exp2,nm,sv]=c;
+  const st=getStatus(exp2);
+  const sl=getStatusLabel(st,exp2);
+  const sc2=st==='active'?'status-active':st==='expired'?'status-expired':st.includes('expiring')?'status-expiring-soon':'';
+  const phone=getPhone(sv,mac,id,nm);
+  const phoneHtml=phone
+    ?`<span class="phone-num">${formatPhone(phone)}</span>`
+    :`<span class="phone-add">+ add</span>`;
+  const safeNm=(nm||'').replace(/'/g,"\\'");
+  const onclick=`openPhoneEdit('${sv.replace(/'/g,"\\'")}','${(mac||'').replace(/'/g,"\\'")}','${(id||'').replace(/'/g,"\\'")}','${safeNm}')`;
+  return{
+    tr:`<tr>
+    <td style="color:#64748b;font-size:.78rem">${i+1}</td>
+    <td class="customer-name">${nm||id||'\u2014'}</td>
+    <td class="phone-cell" onclick="${onclick}">${phoneHtml}</td>
+    <td class="mac">${mac||'\u2014'}</td>
+    <td><span class="server-tag ${getServerClass(sv)}">${sv}</span></td>
+    <td>${formatDate(exp2)}</td>
+    <td><span class="status-badge ${sc2}">${sl}</span></td>
+    <td>${id||'\u2014'}</td>
+  </tr>`,
+    card:`<div class="m-card">
+    <div class="m-card-top"><span class="m-card-name">${nm||id||'\u2014'}</span><span class="m-card-num">#${i+1}</span></div>
+    <div class="m-card-row"><span class="m-card-label">Server</span><span class="m-card-val"><span class="server-tag ${getServerClass(sv)}">${sv}</span></span></div>
+    <div class="m-card-row"><span class="m-card-label">MAC</span><span class="m-card-val mac">${mac||'\u2014'}</span></div>
+    <div class="m-card-row"><span class="m-card-label">Expiry</span><span class="m-card-val">${formatDate(exp2)}</span></div>
+    <div class="m-card-row"><span class="m-card-label">Status</span><span class="m-card-val"><span class="status-badge ${sc2}">${sl}</span></span></div>
+    <div class="m-card-phone" onclick="${onclick}">${phoneHtml}</div>
+  </div>`
+  };
+});
+tb.innerHTML=rows.map(r=>r.tr).join('');
+document.getElementById('mobileCards').innerHTML=rows.map(r=>r.card).join('');
+}
+
+function setFilter(f2){currentFilter=f2;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.toggle('active',b.dataset.filter===f2));renderTable();}
+function sortTable(col){if(currentSort.col===col)currentSort.asc=!currentSort.asc;else{currentSort.col=col;currentSort.asc=true;}renderTable();}
+document.getElementById('searchBox').addEventListener('input',renderTable);
+document.getElementById('serverFilter').addEventListener('change',renderTable);
+
+function timeAgo(ts){
+  if(!ts)return null;
+  const d=new Date(ts);
+  if(isNaN(d.getTime()))return null;
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const date=`${months[d.getMonth()]} ${String(d.getDate()).padStart(2,'0')}`;
+  const hrs=d.getHours()%12||12;
+  const mins=String(d.getMinutes()).padStart(2,'0');
+  const ampm=d.getHours()<12?'AM':'PM';
+  return`${date} ${hrs}:${mins} ${ampm}`;
+}
+
+function syncClass(ts){
+  if(!ts)return'none';
+  const hrs=(Date.now()-new Date(ts).getTime())/3600000;
+  if(hrs<2)return'ok';
+  if(hrs<24)return'warn';
+  return'old';
+}
+
+function renderSyncStatus(){
+  const servers=Object.entries(serverMeta);
+  if(!servers.length)return;
+  const bar=document.getElementById('syncBar');
+  bar.style.display='flex';
+
+  // Find most recent sync across all servers
+  let latestTs=null;
+  servers.forEach(([,meta])=>{
+    if(meta.lastUpdated){
+      const t=new Date(meta.lastUpdated).getTime();
+      if(!latestTs||t>latestTs)latestTs=t;
+    }
+  });
+
+  const overallAgo=latestTs?timeAgo(new Date(latestTs).toISOString()):null;
+  const overallCls=latestTs?syncClass(new Date(latestTs).toISOString()):'none';
+  const dotEl=document.getElementById('syncOverallDot');
+  dotEl.className='sync-dot sync-dot-'+(overallCls==='ok'?'ok':overallCls==='warn'?'warn':overallCls==='old'?'old':'none');
+  document.getElementById('syncOverallTime').textContent=overallAgo||'Never';
+
+  const allServerNames=['Gold AMCH','GoldSamChe','Gold 4K Premium','Smart Amble2','Smart 2021','Spice','Stream 4K','Titan','Crown'];
+  document.getElementById('syncServers').innerHTML=allServerNames.map(name=>{
+    const meta=serverMeta[name]||{};
+    const ago=meta.lastUpdated?timeAgo(meta.lastUpdated):null;
+    const cls=meta.lastUpdated?syncClass(meta.lastUpdated):'none';
+    const dotCls='sync-dot-'+(cls==='ok'?'ok':cls==='warn'?'warn':cls==='old'?'old':'none');
+    return`<span class="sync-chip ${cls}" title="${name}: ${ago||'Never synced'}"><span class="sync-dot ${dotCls}"></span>${name}: ${ago||'Never'}</span>`;
+  }).join('');
+}
+
+if(sessionStorage.getItem('iptv_auth')==='1')loadAllData();
+</script>
+</body>
+</html>
