@@ -2,32 +2,23 @@
   {
     "date": "2026-05-28T21:41:00.000Z",
     "servers": {
-      "Gold shjohn": { "credits": "0", "users": null },
-      "Gold Shajoh": { "credits": "0", "users": null },
-      "Gold 4K Shajoh": { "credits": "98", "users": null },
-      "Smart shjoh": { "credits": "5", "users": null },
-      "Smart johnston": { "credits": "35", "users": null },
-      "Spice Shajoh": { "credits": "51", "users": null },
-      "Stream 4K shjoh": { "credits": "23", "users": null },
-      "Titan shjohnst": { "credits": "1350", "users": 564 },
-      "Crown shjoh": { "credits": "317", "users": 799 },
-      "Lucid Shajoh": { "credits": "133", "users": null }
+      "Titan shjohnst": 564,
+      "Crown shjoh": 799
     }
   },
   {
     "date": "2026-06-04T07:08:56.765Z",
     "servers": {
-      "Gold shjohn": { "credits": "0", "users": 557 },
-      "Gold Shajoh": { "credits": "0", "users": 65 },
-      "Gold 4K Shajoh": { "credits": "49", "users": 248 },
-      "Smart shjoh": { "credits": "5", "users": 325 },
-      "Smart johnston": { "credits": "68", "users": 500 },
-      "Spice Shajoh": { "credits": "49", "users": 227 },
-      "Stream 4K shjoh": { "credits": "250", "users": 223 },
-      "Titan shjohnst": { "credits": "1274", "users": 564 },
-      "Crown shjoh": { "credits": "123", "users": 797 },
-      "Lucid Shajoh": { "credits": "133", "users": 22 },
-      "Lite TV shjoh99": { "credits": "unknown", "users": null }
+      "Gold shjohn": 557,
+      "Gold Shajoh": 65,
+      "Gold 4K Shajoh": 248,
+      "Smart shjoh": 325,
+      "Smart johnston": 500,
+      "Spice Shajoh": 227,
+      "Stream 4K shjoh": 223,
+      "Titan shjohnst": 564,
+      "Crown shjoh": 797,
+      "Lucid Shajoh": 22
     }
   }
 ]
