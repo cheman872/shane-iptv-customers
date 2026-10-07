@@ -3,6 +3,19 @@
 Programs a new Android box / Firestick with your full app lineup and settings in
 one command. Safe to re-run on the same box any time (installs just upgrade).
 
+## Fastest path (Windows, zero setup)
+
+1. Download this `provision` folder to your computer
+   (GitHub: green **Code** button → Download ZIP → unzip → open `provision`).
+2. Put your APKs into the `apks` folder (links in `apks/README.md`).
+3. Right-click **`bootstrap.ps1`** → **Run with PowerShell**.
+   It downloads ADB by itself, asks for the box's IP (just press Enter for
+   192.168.1.218), and runs the whole provisioning.
+4. When the TV asks **"Allow USB debugging?"** → tick *Always allow* → OK.
+
+That's it. The manual steps below are only for Mac users or if you prefer to
+set things up yourself.
+
 ```
 provision/
 ├── provision.ps1          <- run this on Windows (PowerShell)
