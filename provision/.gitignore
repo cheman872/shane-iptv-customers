@@ -1,0 +1,4 @@
+# APKs are big binaries - keep them out of git
+apks/*.apk
+# customers.csv holds real customer data - only the .example template is committed
+customers.csv
