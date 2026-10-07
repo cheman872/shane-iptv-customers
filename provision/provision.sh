@@ -46,17 +46,27 @@ provision_box() {
     [ "$STATE" = "device" ] || { echo "!! $IP never authorized - accept the prompt and re-run."; FAIL+=("$IP"); return; }
   fi
 
-  # 1. Install every APK in the kit (-r = reinstall ok, safe to re-run)
-  local APK OK=1
+  # 1. Install every APK in the kit (-r = reinstall ok, safe to re-run).
+  #    APKs captured as pkg.split0.apk/pkg.split1.apk are one app in several
+  #    pieces and get installed together with install-multiple.
+  local APK OK=1 BASE
   shopt -s nullglob
+  local -A GROUPS=()
   for APK in apks/*.apk; do
-    echo ">> Installing ${APK##*/} ..."
-    if ! adb -s "$BOX" install -r "$APK"; then
-      echo "!! Install failed: $APK"
-      OK=0
-    fi
+    BASE=$(basename "$APK" .apk); BASE=${BASE%.split[0-9]*}
+    GROUPS[$BASE]+="$APK"$'\n'
   done
   shopt -u nullglob
+  for BASE in "${!GROUPS[@]}"; do
+    mapfile -t FILES <<< "${GROUPS[$BASE]%$'\n'}"
+    if [ "${#FILES[@]}" -gt 1 ]; then
+      echo ">> Installing $BASE (${#FILES[@]} split APKs) ..."
+      adb -s "$BOX" install-multiple -r "${FILES[@]}" || { echo "!! Install failed: $BASE"; OK=0; }
+    else
+      echo ">> Installing ${FILES[0]##*/} ..."
+      adb -s "$BOX" install -r "${FILES[0]}" || { echo "!! Install failed: ${FILES[0]}"; OK=0; }
+    fi
+  done
 
   # 2. Settings
   if [ "$SET_NEVER_SLEEP" = "1" ]; then

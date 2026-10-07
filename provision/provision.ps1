@@ -55,11 +55,20 @@ function Provision-Box([string]$Ip, [string]$Name = "") {
 
     $ok = $true
 
-    # 1. Install every APK in the kit (-r = reinstall ok, safe to re-run)
-    Get-ChildItem "apks\*.apk" -ErrorAction SilentlyContinue | ForEach-Object {
-        Write-Host ">> Installing $($_.Name) ..."
-        adb -s $Box install -r $_.FullName
-        if ($LASTEXITCODE -ne 0) { Write-Host "!! Install failed: $($_.Name)" -ForegroundColor Red; $ok = $false }
+    # 1. Install every APK in the kit (-r = reinstall ok, safe to re-run).
+    #    APKs captured as pkg.split0.apk/pkg.split1.apk are one app in several
+    #    pieces and get installed together with install-multiple.
+    $groups = Get-ChildItem "apks\*.apk" -ErrorAction SilentlyContinue |
+        Group-Object { $_.BaseName -replace '\.split\d+$', '' }
+    foreach ($g in $groups) {
+        if ($g.Count -gt 1) {
+            Write-Host ">> Installing $($g.Name) ($($g.Count) split APKs) ..."
+            adb -s $Box install-multiple -r ($g.Group.FullName)
+        } else {
+            Write-Host ">> Installing $($g.Group[0].Name) ..."
+            adb -s $Box install -r $g.Group[0].FullName
+        }
+        if ($LASTEXITCODE -ne 0) { Write-Host "!! Install failed: $($g.Name)" -ForegroundColor Red; $ok = $false }
     }
 
     # 2. Settings

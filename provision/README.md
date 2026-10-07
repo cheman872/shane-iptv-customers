@@ -5,16 +5,24 @@ one command. Safe to re-run on the same box any time (installs just upgrade).
 
 ## Fastest path (Windows, zero setup)
 
+Already have one box set up exactly how you want it? Clone it:
+
 1. Download this `provision` folder to your computer
    (GitHub: green **Code** button → Download ZIP → unzip → open `provision`).
-2. Put your APKs into the `apks` folder (links in `apks/README.md`).
-3. Right-click **`bootstrap.ps1`** → **Run with PowerShell**.
-   It downloads ADB by itself, asks for the box's IP (just press Enter for
-   192.168.1.218), and runs the whole provisioning.
-4. When the TV asks **"Allow USB debugging?"** → tick *Always allow* → OK.
+2. Enable ADB Debugging on the **golden box** (your finished one), then
+   right-click **`capture.ps1`** → **Run with PowerShell**. It downloads ADB
+   by itself and pulls every app you installed on that box into `apks\`.
+3. For each **new box**: enable ADB Debugging, then right-click
+   **`bootstrap.ps1`** → **Run with PowerShell** and enter the new box's IP.
+4. When a TV asks **"Allow USB debugging?"** → tick *Always allow* → OK.
 
-That's it. The manual steps below are only for Mac users or if you prefer to
-set things up yourself.
+Note: capture copies the *apps*, not their in-app settings. For your IPTV
+player's playlists/logins, use the app's own backup/export on the golden box,
+put the backup file in `configs\` (it gets copied to every new box's
+Download folder), and restore from it in the app on first launch.
+
+The manual steps below are only for Mac users or if you prefer to set things
+up yourself.
 
 ```
 provision/
